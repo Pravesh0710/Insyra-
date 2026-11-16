@@ -238,7 +238,6 @@ def print_profile_summary(report):
     print("=" * 60)
     print(f"Total Rows:            {ov['total_rows']:,}")
     print(f"Total Columns:         {ov['total_columns']}")
-    print(f"Memory Usage:          {ov['memory_usage_formatted']}")
     print(f"Duplicate Rows:        {ov['duplicate_rows']} ({ov['duplicate_percentage']}%)")
     print(f"Missing Cells:         {report['missing_values']['total_missing_cells']} ({report['missing_values']['overall_missing_percentage']}%)")
     print("-" * 60)

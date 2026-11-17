@@ -261,3 +261,8 @@ if __name__ == "__main__":
     file_path = "server/netflix_customer_churn.csv"
     report = generate_profile_report(file_path)
     print_profile_summary(report)
+
+
+# alias for convenience
+profile_dataset = generate_profile_report
+

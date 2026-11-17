@@ -1,32 +1,44 @@
+import os
 import pandas as pd
 import numpy as np
-import os
-from server.profiler import load_dataset
 
-df=load_dataset()
-cleaned_df=df.copy()
+# support running directly or as a module
+try:
+    from server.profiler import load_dataset
+except ImportError:
+    from profiler import load_dataset
+
+
 def remove_duplicates(df):
-    cleaned_df=df.drop_duplicates()
-    print("Orignal Dataset: ",df.is_duplicate().sum)
-    print("Cleaned Dataset: ",cleaned_df)
+    cleaned_df = df.drop_duplicates()
+    duplicates_count = int(df.duplicated().sum())
+    print("Duplicate rows found:", duplicates_count)
+    return cleaned_df
+
 
 def handle_missing_values(df, drop_threshold=50):
+    cleaned_df = df.copy()
+
     for col in cleaned_df.columns:
         null_count = cleaned_df[col].isnull().sum()
         if null_count == 0:
             continue
+
         null_percent = (null_count / len(cleaned_df)) * 100
-        
+
+        # drop if more than threshold% is missing
         if null_percent > drop_threshold:
             print(f"Dropping column '{col}' because {round(null_percent, 1)}% is missing.")
             cleaned_df = cleaned_df.drop(columns=[col])
             continue
-        
+
+        # numeric columns -> fill with median
         if np.issubdtype(cleaned_df[col].dtype, np.number):
             median_val = cleaned_df[col].median()
             cleaned_df[col] = cleaned_df[col].fillna(median_val)
             print(f"Filled missing in '{col}' (numeric) with median: {round(median_val, 2)}")
-        
+
+        # text/categorical columns -> fill with mode
         else:
             if not cleaned_df[col].mode().empty:
                 mode_val = cleaned_df[col].mode()[0]
@@ -34,7 +46,9 @@ def handle_missing_values(df, drop_threshold=50):
                 print(f"Filled missing in '{col}' (text) with mode: '{mode_val}'")
             else:
                 cleaned_df[col] = cleaned_df[col].fillna("Unknown")
+
     return cleaned_df
+
 
 def clean_text_columns(df, make_lowercase=True):
     df_clean = df.copy()
@@ -42,7 +56,6 @@ def clean_text_columns(df, make_lowercase=True):
 
     for col in text_cols:
         cleaned_series = df_clean[col].astype(str).str.strip()
-
         cleaned_series = cleaned_series.str.replace(r'\s+', ' ', regex=True)
 
         if make_lowercase:
@@ -69,10 +82,12 @@ def clean_dataset(file_path, output_dir="cleaned files"):
     initial_cols = len(df.columns)
     print(f"Loaded dataset: {initial_rows} rows, {initial_cols} columns")
 
+    # cleaning steps
     df_clean = remove_duplicates(df)
     df_clean = clean_text_columns(df_clean, make_lowercase=False)
     df_clean = handle_missing_values(df_clean)
-    
+
+    # make sure output directory exists
     os.makedirs(output_dir, exist_ok=True)
     base_name = os.path.basename(file_path)
     output_filename = f"cleaned_{base_name}"
@@ -99,6 +114,7 @@ def clean_dataset(file_path, output_dir="cleaned files"):
         "columns_after": final_cols,
         "rows_removed": initial_rows - final_rows
     }
+
 
 if __name__ == "__main__":
     input_file = "server/netflix_customer_churn.csv"

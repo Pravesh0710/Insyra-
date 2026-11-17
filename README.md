@@ -82,9 +82,10 @@ python main.py
 - [x] Initial Python project setup
 - [x] MySQL database connectivity
 - [x] Environment-based database configuration
+- [x] CSV data validation and processing
+- [x] Automated business data operations (Profiling & Cleaning)
+- [x] Database activity logging
 - [ ] CSV file upload functionality
-- [ ] CSV data validation and processing
-- [ ] Automated business data operations
 - [ ] Data visualization and reporting
 - [ ] Dashboard integration
 - [ ] Advanced automation features

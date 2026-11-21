@@ -1,4 +1,5 @@
 import os
+import re
 import mysql.connector
 from dotenv import load_dotenv
 
@@ -10,6 +11,13 @@ DB_HOST = os.getenv("DB_HOST", "127.0.0.1")
 DB_USER = os.getenv("DB_USER", "root")
 DB_PASSWORD = os.getenv("DB_PASSWORD", "root")
 DB_NAME = os.getenv("DB_NAME", "Insyra_db")
+
+
+def sanitize_identifier(name):
+    """Ensure database identifier contains only valid alphanumeric characters."""
+    if not name or not re.match(r"^[A-Za-z0-9_]+$", name):
+        raise ValueError(f"Invalid database identifier: {name}")
+    return name
 
 
 def get_conn():
@@ -31,6 +39,8 @@ def init_database():
     Safe to run on every startup.
     """
     try:
+        clean_db_name = sanitize_identifier(DB_NAME)
+
         # connect without database first to ensure database exists
         server_conn = mysql.connector.connect(
             host=DB_HOST,
@@ -40,7 +50,7 @@ def init_database():
             connection_timeout=5
         )
         cursor = server_conn.cursor()
-        cursor.execute(f"CREATE DATABASE IF NOT EXISTS {DB_NAME};")
+        cursor.execute(f"CREATE DATABASE IF NOT EXISTS `{clean_db_name}`;")
         cursor.close()
         server_conn.close()
 
@@ -70,7 +80,7 @@ def init_database():
 
 
 def log_dataset_action(file_name, original_rows, cleaned_rows, rows_removed, saved_path):
-    """Logs a completed dataset cleaning operation into MySQL."""
+    """Logs a completed dataset cleaning operation into MySQL using parameterized queries."""
     try:
         conn = get_conn()
         cursor = conn.cursor()
@@ -91,12 +101,12 @@ def log_dataset_action(file_name, original_rows, cleaned_rows, rows_removed, sav
 
 
 def get_dataset_logs(limit=10):
-    """Fetches recent dataset activity logs from MySQL."""
+    """Fetches recent dataset activity logs from MySQL using parameterized limit."""
     try:
         conn = get_conn()
         cursor = conn.cursor(dictionary=True)
         query = "SELECT * FROM dataset_logs ORDER BY created_at DESC LIMIT %s;"
-        cursor.execute(query, (limit,))
+        cursor.execute(query, (int(limit),))
         records = cursor.fetchall()
         cursor.close()
         conn.close()

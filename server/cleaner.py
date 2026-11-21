@@ -40,8 +40,9 @@ def handle_missing_values(df, drop_threshold=50):
 
         # text/categorical columns -> fill with mode
         else:
-            if not cleaned_df[col].mode().empty:
-                mode_val = cleaned_df[col].mode()[0]
+            non_null_modes = cleaned_df[col].dropna().mode()
+            if not non_null_modes.empty:
+                mode_val = non_null_modes[0]
                 cleaned_df[col] = cleaned_df[col].fillna(mode_val)
                 print(f"Filled missing in '{col}' (text) with mode: '{mode_val}'")
             else:
@@ -55,16 +56,17 @@ def clean_text_columns(df, make_lowercase=True):
     text_cols = df_clean.select_dtypes(include=['object']).columns
 
     for col in text_cols:
-        cleaned_series = df_clean[col].astype(str).str.strip()
-        cleaned_series = cleaned_series.str.replace(r'\s+', ' ', regex=True)
+        # preserve true missing values while cleaning string values
+        mask = df_clean[col].notnull()
+        series = df_clean.loc[mask, col].astype(str).str.strip()
+        series = series.str.replace(r'\s+', ' ', regex=True)
 
         if make_lowercase:
-            cleaned_series = cleaned_series.str.lower()
+            series = series.str.lower()
 
-        cleaned_series = cleaned_series.replace('nan', None)
-        df_clean[col] = cleaned_series
+        df_clean.loc[mask, col] = series
 
-    print(f"Cleaned {len(text_cols)} text columns (spaces stripped & formatted).")
+    print(f"Cleaned {len(text_cols)} text columns (spaces stripped & formatted safely).")
     return df_clean
 
 

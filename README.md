@@ -117,4 +117,4 @@ Contributions, suggestions, and improvements are welcome.
 
 If you find this project interesting, consider giving the repository a star.
 
-**Insyra — Making Business Operations Smarter Through Automation.**
+**Insyra : Making Business Operations Smarter Through Automation.**

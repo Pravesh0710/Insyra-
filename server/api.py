@@ -49,7 +49,7 @@ def get_profile(filename: str):
     if not os.path.exists(file_path):
         return {"error": "File not found"}
     report = generate_profile_report(file_path)
-    return reports
+    return report
 
 # Clean file route (cleans and saves to 'cleaned files')
 @app.post("/clean/{filename}")
